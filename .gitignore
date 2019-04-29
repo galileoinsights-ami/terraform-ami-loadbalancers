@@ -1,0 +1,4 @@
+.DS_Store
+.terraform
+setup.sh
+reference.rf

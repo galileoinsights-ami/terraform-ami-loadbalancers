@@ -71,5 +71,4 @@ resource "aws_alb_listener" "front_end" {
     target_group_arn = "${aws_alb_target_group.ecs-ami-if-admin.id}"
     type             = "forward"
   }
-  tags = "${var.default_aws_tags}"
 }

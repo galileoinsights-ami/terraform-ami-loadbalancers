@@ -36,23 +36,87 @@ resource "aws_alb_target_group" "ecs-ami-if-admin" {
   vpc_id   = "${data.terraform_remote_state.network.vpc_id}"
   target_type = "ip"
   tags = "${var.default_aws_tags}"
+  health_check {
+    path = "/health"
+    matcher = "200"
+  }
 }
 
-# resource "aws_alb_target_group" "ecs-ami-if-icm" {
-#   name     = "ecs-ami-if-admin"
-#   port     = 80
-#   protocol = "HTTP"
-#   vpc_id   = "${data.terraform_remote_state.network.vpc_id}"
-#   target_type = "ip"
-# }
+# Creating the AMI ICM Target group
+resource "aws_alb_target_group" "ecs-ami-if-icm" {
+  name     = "ecs-ami-if-icm"
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = "${data.terraform_remote_state.network.vpc_id}"
+  target_type = "ip"
+  tags = "${var.default_aws_tags}"
+  health_check {
+    path = "/health"
+    matcher = "200"
+  }
+}
 
-# resource "aws_alb_target_group" "ecs-ami-if-notifications" {
-#   name     = "ecs-ami-if-admin"
-#   port     = 80
-#   protocol = "HTTP"
-#   vpc_id   = "${data.terraform_remote_state.network.vpc_id}"
-#   target_type = "ip"
-# }
+# Creating the AMI Notifications Target group
+resource "aws_alb_target_group" "ecs-ami-if-notifications" {
+  name     = "ecs-ami-if-notifications"
+  port     = 80
+  protocol = "HTTP"
+  vpc_id   = "${data.terraform_remote_state.network.vpc_id}"
+  target_type = "ip"
+  tags = "${var.default_aws_tags}"
+  health_check {
+    path = "/health"
+    matcher = "200"
+  }  
+}
+
+# Creating the AMI Admin listener rule
+resource "aws_alb_listener_rule" "ami_admin_listener_rule" {
+  listener_arn = "${aws_alb_listener.ami-if.id}"
+  priority     = 1
+
+  action {
+    type             = "forward"
+    target_group_arn = "${aws_alb_target_group.ecs-ami-if-admin.id}"
+  }
+
+  condition {
+    field  = "path-pattern"
+    values = ["/api/v1/admin/*"]
+  }
+}
+
+# Creating the AMI ICM listener rule
+resource "aws_alb_listener_rule" "ami_icm_listener_rule" {
+  listener_arn = "${aws_alb_listener.ami-if.id}"
+  priority     = 2
+
+  action {
+    type             = "forward"
+    target_group_arn = "${aws_alb_target_group.ecs-ami-if-icm.id}"
+  }
+
+  condition {
+    field  = "path-pattern"
+    values = ["/api/v1/icm/*"]
+  }
+}
+
+# Creating the AMI Notifications listener rule
+resource "aws_alb_listener_rule" "ami_notifications_listener_rule" {
+  listener_arn = "${aws_alb_listener.ami-if.id}"
+  priority     = 3
+
+  action {
+    type             = "forward"
+    target_group_arn = "${aws_alb_target_group.ecs-ami-if-notifications.id}"
+  }
+
+  condition {
+    field  = "path-pattern"
+    values = ["/api/v1/notifications/*"]
+  }
+}
 
 # Creating the AMI Loadbalancer
 resource "aws_alb" "ami-if" {
@@ -62,7 +126,7 @@ resource "aws_alb" "ami-if" {
   tags = "${var.default_aws_tags}"
 }
 
-resource "aws_alb_listener" "front_end" {
+resource "aws_alb_listener" "ami-if" {
   load_balancer_arn = "${aws_alb.ami-if.id}"
   port              = "80"
   protocol          = "HTTP"

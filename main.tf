@@ -121,7 +121,7 @@ resource "aws_alb_listener_rule" "ami_notifications_listener_rule" {
 # Creating the AMI Loadbalancer
 resource "aws_alb" "ami-if" {
   name            = "alb-ami-if"
-  subnets         = ["${data.terraform_remote_state.network.private_subnets}"]
+  subnets         = ["${data.terraform_remote_state.network.public_subnets}"]
   security_groups = ["${data.terraform_remote_state.network.default_security_group_id}","${data.terraform_remote_state.network.web_security_group_id}"]
   tags = "${var.default_aws_tags}"
 }
